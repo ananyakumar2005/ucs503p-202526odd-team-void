@@ -4,13 +4,28 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-2024")
+
+# Secure secret key configuration
+app.secret_key = os.environ.get('SECRET_KEY') 
+if not app.secret_key:
+    # Fallback for development 
+    app.secret_key = '12345'
+    print("⚠️  WARNING: Using development secret key - set SECRET_KEY environment variable for production!")
 
 # Initialize Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'Please log in to access this page.'
+
+# In-memory user storage (replace with database in production)
+users = {
+    'admin': {
+        'password': generate_password_hash('admin123'),
+        'id': 1,
+        'email': 'admin@campustrade.com'
+    }
+}
 
 # In-memory user storage (replace with database in production)
 users = {
