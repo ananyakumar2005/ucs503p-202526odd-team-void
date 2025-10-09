@@ -4,12 +4,9 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-
-# Secure secret key configuration
 app.secret_key = os.environ.get('SECRET_KEY') 
 if not app.secret_key:
-    # Fallback for development 
-    app.secret_key = '12345'
+    app.secret_key = 'dev-key-only-for-local-development'
     print("⚠️  WARNING: Using development secret key - set SECRET_KEY environment variable for production!")
 
 # Initialize Flask-Login
@@ -18,7 +15,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'Please log in to access this page.'
 
-# In-memory user storage (replace with database in production)
+# In-memory user storage
 users = {
     'admin': {
         'password': generate_password_hash('admin123'),
@@ -27,20 +24,13 @@ users = {
     }
 }
 
-# In-memory user storage (replace with database in production)
-users = {
-    'admin': {
-        'password': generate_password_hash('admin123'),
-        'id': 1,
-        'email': 'admin@campustrade.com'
-    }
-}
-
-# In-memory storage for barters and requests
+# In-memory storage for barters, requests, and trade offers
 barters = []
 requests = []
+trade_offers = []
 barter_id = 1
 request_id = 1
+trade_offer_id = 1
 
 # User class for Flask-Login
 class User(UserMixin):
@@ -95,7 +85,6 @@ def register():
         if username in users:
             return render_template("register.html", error="Username already exists")
         
-        # Create new user
         new_user_id = max([user['id'] for user in users.values()]) + 1
         users[username] = {
             'id': new_user_id,
@@ -103,12 +92,47 @@ def register():
             'email': email
         }
         
-        # Auto-login after registration
         user = User(users[username])
         login_user(user)
         return redirect(url_for("index"))
     
     return render_template("register.html")
+
+# --- Trade Offer Routes ---
+@app.route("/create_trade_offer/<int:barter_id>", methods=["POST"])
+@login_required
+def create_trade_offer(barter_id):
+    global trade_offer_id
+    
+    barter = next((b for b in barters if b["id"] == barter_id), None)
+    if not barter:
+        return redirect(url_for("index"))
+    
+    name = request.form["name"]
+    mobile = request.form["mobile"]
+    item_description = request.form["item_description"]
+    
+    new_trade_offer = {
+        "id": trade_offer_id,
+        "barter_id": barter_id,
+        "barter_item": barter["item"],
+        "barter_owner": barter["name"],
+        "offerer_name": name,
+        "offerer_mobile": mobile,
+        "item_description": item_description,
+        "status": "pending",
+        "created_by": current_user.username
+    }
+    trade_offers.append(new_trade_offer)
+    trade_offer_id += 1
+    
+    return redirect(url_for("index"))
+
+@app.route("/trade_offers")
+@login_required
+def view_trade_offers():
+    user_trade_offers = [to for to in trade_offers if to.get("created_by") == current_user.username]
+    return render_template("trade_offers.html", trade_offers=user_trade_offers)
 
 # --- Protected Routes ---
 @app.route("/")
@@ -170,7 +194,6 @@ def edit_barter(id):
     if not barter:
         return redirect(url_for("index"))
     
-    # Check if user owns this barter
     if barter.get("created_by") != current_user.username:
         return redirect(url_for("index"))
 
@@ -190,7 +213,6 @@ def edit_request(id):
     if not request_item:
         return redirect(url_for("index"))
     
-    # Check if user owns this request
     if request_item.get("created_by") != current_user.username:
         return redirect(url_for("index"))
 
