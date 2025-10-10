@@ -54,8 +54,9 @@ A modern web application for campus bartering and trade offers. Built with Flask
    ```bash
    python app.py
 
-###🙏 Acknowledgments
+## 🙏 Acknowledgments
 
 - Flask community for excellent documentation
 - Bootstrap for the UI framework
 - Render for seamless deployment hosting
+
