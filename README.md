@@ -38,8 +38,7 @@ A modern web application for campus bartering and trade offers. Built with Flask
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
-   cd campus-trade
+   git clone https://github.com/ananyakumar2005/ucs503p-202526odd-team-void
 2. **Create virtual environment (Recommended)**
    ```bash
     python -m venv venv
@@ -59,4 +58,5 @@ A modern web application for campus bartering and trade offers. Built with Flask
 - Flask community for excellent documentation
 - Bootstrap for the UI framework
 - Render for seamless deployment hosting
+
 
