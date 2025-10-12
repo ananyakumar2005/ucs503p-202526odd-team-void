@@ -4,69 +4,193 @@
   <meta charset="UTF-8">
   <title>CampusTrade</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script>
-    function showView(view) {
-      if (view === 'barters') {
-        document.getElementById('barters-view').style.display = 'block';
-        document.getElementById('requests-view').style.display = 'none';
-        document.getElementById('barters-btn').classList.add('active');
-        document.getElementById('requests-btn').classList.remove('active');
-      } else {
-        document.getElementById('barters-view').style.display = 'none';
-        document.getElementById('requests-view').style.display = 'block';
-        document.getElementById('barters-btn').classList.remove('active');
-        document.getElementById('requests-btn').classList.add('active');
-      }
-    }
-    
-    function toggleForm(formType) {
-      if (formType === 'barter') {
-        document.getElementById('barter-form').style.display = 'block';
-        document.getElementById('request-form').style.display = 'none';
-      } else {
-        document.getElementById('barter-form').style.display = 'none';
-        document.getElementById('request-form').style.display = 'block';
-      }
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #f8f9fa;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --text-primary: #212529;
+      --text-secondary: #6c757d;
+      --border-color: #dee2e6;
+      --shadow: rgba(0, 0, 0, 0.1);
     }
 
-    // Hide forms when clicking cancel
-    function hideForms() {
-      document.getElementById('barter-form').style.display = 'none';
-      document.getElementById('request-form').style.display = 'none';
+    [data-theme="dark"] {
+      --bg-primary: #121212;
+      --bg-secondary: #1e1e1e;
+      --bg-card: #2d2d2d;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0a0;
+      --border-color: #404040;
+      --shadow: rgba(0, 0, 0, 0.3);
     }
-  </script>
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      transition: all 0.3s ease;
+    }
+
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 2px 8px var(--shadow);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px var(--shadow);
+    }
+
+    .table {
+      color: var(--text-primary);
+    }
+
+    .form-control, .form-select {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+    }
+
+    .form-control:focus, .form-select:focus {
+      background-color: var(--bg-secondary);
+      border-color: #0d6efd;
+      color: var(--text-primary);
+    }
+
+    .theme-toggle {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.2rem;
+      transition: color 0.3s ease;
+    }
+
+    .theme-toggle:hover {
+      color: var(--text-primary);
+    }
+
+    .search-box {
+      position: relative;
+    }
+
+    .search-box .bi-search {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+    }
+
+    .search-box input {
+      padding-left: 40px;
+    }
+
+    .filter-badge {
+      cursor: pointer;
+    }
+
+    .empty-state {
+      padding: 3rem 1rem;
+      text-align: center;
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .action-buttons .btn {
+      border-radius: 20px;
+      padding: 0.5rem 1.5rem;
+    }
+
+    .nav-pills .nav-link {
+      border-radius: 20px;
+      margin: 0 0.25rem;
+    }
+
+    .stat-card {
+      text-align: center;
+      padding: 1.5rem;
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #0d6efd;
+    }
+  </style>
 </head>
-<body class="bg-light" onload="showView('barters')">
-
+<body>
 <div class="container py-4">
-  <!-- Header with User Info -->
+  <!-- Header -->
   <div class="row mb-4">
     <div class="col">
       <div class="d-flex justify-content-between align-items-center">
-        <h2 class="mb-0">🔄 CampusTrade</h2>
+        <div class="d-flex align-items-center">
+          <h2 class="mb-0 me-3">🔄 CampusTrade</h2>
+          <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+            <i class="bi bi-moon"></i>
+          </button>
+        </div>
         <div class="d-flex align-items-center">
           <span class="me-3">Welcome, <strong>{{ username }}</strong>!</span>
-          <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
+          <a href="{{ url_for('view_trade_offers') }}" class="btn btn-outline-warning btn-sm me-2">
+            <i class="bi bi-arrow-left-right"></i> My Offers
+          </a>
+          <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">
+            <i class="bi bi-box-arrow-right"></i> Logout
+          </a>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Create New Buttons -->
+  <!-- Quick Stats -->
   <div class="row mb-4">
-    <div class="col-6">
-      <button class="btn btn-success w-100" onclick="toggleForm('barter')">Create New Barter</button>
+    <div class="col-md-4">
+      <div class="card stat-card">
+        <div class="stat-number">{{ barters|length }}</div>
+        <div class="text-muted">Available Barters</div>
+      </div>
     </div>
-    <div class="col-6">
-      <button class="btn btn-info w-100" onclick="toggleForm('request')">Create New Request</button>
+    <div class="col-md-4">
+      <div class="card stat-card">
+        <div class="stat-number">{{ requests|length }}</div>
+        <div class="text-muted">Active Requests</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card stat-card">
+        <div class="stat-number">{{ trade_offers|selectattr("created_by", "equalto", username)|list|length }}</div>
+        <div class="text-muted">My Offers</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="row mb-4 action-buttons">
+    <div class="col-md-6 mb-2">
+      <button class="btn btn-success w-100" onclick="toggleForm('barter')">
+        <i class="bi bi-plus-circle"></i> Create New Barter
+      </button>
+    </div>
+    <div class="col-md-6 mb-2">
+      <button class="btn btn-info w-100" onclick="toggleForm('request')">
+        <i class="bi bi-search-heart"></i> Create New Request
+      </button>
     </div>
   </div>
 
   <!-- Barter Form -->
-  <div class="card shadow-sm mb-4" id="barter-form" style="display: none;">
+  <div class="card mb-4" id="barter-form" style="display: none;">
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="card-title mb-0">Create New Barter</h5>
+        <h5 class="card-title mb-0"><i class="bi bi-tag"></i> Create New Barter</h5>
         <button type="button" class="btn-close" onclick="hideForms()"></button>
       </div>
       <form method="POST" action="{{ url_for('create_barter') }}" class="row g-3">
@@ -89,7 +213,7 @@
           </select>
         </div>
         <div class="col-12">
-          <button type="submit" class="btn btn-primary">Post Barter</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Post Barter</button>
           <button type="button" class="btn btn-secondary" onclick="hideForms()">Cancel</button>
         </div>
       </form>
@@ -97,10 +221,10 @@
   </div>
 
   <!-- Request Form -->
-  <div class="card shadow-sm mb-4" id="request-form" style="display: none;">
+  <div class="card mb-4" id="request-form" style="display: none;">
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="card-title mb-0">Create New Request</h5>
+        <h5 class="card-title mb-0"><i class="bi bi-search"></i> Create New Request</h5>
         <button type="button" class="btn-close" onclick="hideForms()"></button>
       </div>
       <form method="POST" action="{{ url_for('create_request') }}" class="row g-3">
@@ -123,145 +247,190 @@
           </select>
         </div>
         <div class="col-12">
-          <button type="submit" class="btn btn-primary">Post Request</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Post Request</button>
           <button type="button" class="btn btn-secondary" onclick="hideForms()">Cancel</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Toggle View Buttons -->
-  <div class="btn-group w-100 mb-4" role="group">
-    <button id="barters-btn" type="button" class="btn btn-outline-primary active" onclick="showView('barters')">Available Barters</button>
-    <button id="requests-btn" type="button" class="btn btn-outline-primary" onclick="showView('requests')">Unfulfilled Requests</button>
+  <!-- Main Navigation -->
+  <ul class="nav nav-pills mb-4 justify-content-center" id="viewTabs">
+    <li class="nav-item">
+      <a class="nav-link active" href="#" data-view="barters">
+        <i class="bi bi-grid"></i> Available Barters
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#" data-view="requests">
+        <i class="bi bi-heart"></i> Unfulfilled Requests
+      </a>
+    </li>
+  </ul>
+
+  <!-- Search and Filter Section -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-8">
+          <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" id="searchInput" class="form-control" placeholder="Search items, names, or hostels...">
+          </div>
+        </div>
+        <div class="col-md-4">
+          <select id="hostelFilter" class="form-select">
+            <option value="">All Hostels</option>
+            <option>A</option><option>B</option><option>C</option><option>D</option>
+            <option>E</option><option>G</option><option>I</option><option>J</option>
+            <option>K</option><option>L</option><option>M</option><option>N</option>
+            <option>O</option><option>PG</option><option>Q</option>
+          </select>
+        </div>
+      </div>
+      <div class="mt-2" id="activeFilters" style="display: none;">
+        <small class="text-muted">Active filters: </small>
+        <span id="filterBadges"></span>
+        <button class="btn btn-sm btn-outline-secondary ms-2" onclick="clearFilters()">
+          <i class="bi bi-x-circle"></i> Clear
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Barters View -->
   <div id="barters-view">
-    <div class="card shadow-sm">
+    <div class="card">
       <div class="card-body">
-        <h5 class="card-title mb-3">Available Barters</h5>
-        {% if barters %}
-        <div class="table-responsive">
-          <table class="table table-striped table-bordered align-middle">
-            <thead class="table-dark">
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Mobile</th>
-                <th>Item Available</th>
-                <th>Hostel</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-            {% for b in barters %}
-              <tr>
-                <td>{{ b.id }}</td>
-                <td>{{ b.name }}</td>
-                <td>{{ b.mobile }}</td>
-                <td>{{ b.item }}</td>
-                <td>{{ b.hostel }}</td>
-                <td>
-                  {% if b.created_by == username %}
-                  <a href="{{ url_for('edit_barter', id=b.id) }}" class="btn btn-sm btn-warning">Edit</a>
-                  <a href="{{ url_for('delete_barter', id=b.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Delete this barter?')">Delete</a>
-                  {% else %}
-                  <span class="text-muted">Owned by {{ b.created_by }}</span>
-                  {% endif %}
-                </td>
-              </tr>
-            {% endfor %}
-            </tbody>
-          </table>
+        <h5 class="card-title mb-3"><i class="bi bi-grid"></i> Available Barters</h5>
+        <div id="barters-container">
+          {% if barters %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead class="table-dark">
+                <tr>
+                  <th>Item</th>
+                  <th>Owner</th>
+                  <th>Contact</th>
+                  <th>Hostel</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="barters-table">
+                {% for b in barters %}
+                <tr class="barter-item" data-hostel="{{ b.hostel }}" data-search="{{ (b.name + ' ' + b.item + ' ' + b.hostel)|lower }}">
+                  <td>
+                    <strong>{{ b.item }}</strong>
+                    {% if b.created_by == username %}
+                    <span class="badge bg-primary ms-1">Yours</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ b.name }}</td>
+                  <td>{{ b.mobile }}</td>
+                  <td><span class="badge bg-secondary">{{ b.hostel }}</span></td>
+                  <td>
+                    {% if b.created_by == username %}
+                    <a href="{{ url_for('edit_barter', id=b.id) }}" class="btn btn-sm btn-outline-warning">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="{{ url_for('delete_barter', id=b.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this barter?')">
+                      <i class="bi bi-trash"></i>
+                    </a>
+                    {% else %}
+                    <button class="btn btn-sm btn-outline-primary" onclick="initiateTradeOffer({{ b.id }}, '{{ b.item }}')">
+                      <i class="bi bi-arrow-left-right"></i> Trade
+                    </button>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <i class="bi bi-inbox"></i>
+            <h5>No barters available</h5>
+            <p class="text-muted">Be the first to create a barter listing!</p>
+            <button class="btn btn-success" onclick="toggleForm('barter')">
+              <i class="bi bi-plus-circle"></i> Create Barter
+            </button>
+          </div>
+          {% endif %}
         </div>
-        {% else %}
-        <div class="text-center py-4">
-          <p class="text-muted">No barters available yet.</p>
-          <button class="btn btn-success" onclick="toggleForm('barter')">Create the first barter!</button>
-        </div>
-        {% endif %}
       </div>
     </div>
   </div>
 
   <!-- Requests View -->
   <div id="requests-view" style="display: none;">
-    <div class="card shadow-sm">
+    <div class="card">
       <div class="card-body">
-        <h5 class="card-title mb-3">Unfulfilled Requests</h5>
-        {% if requests %}
-        <div class="table-responsive">
-          <table class="table table-striped table-bordered align-middle">
-            <thead class="table-dark">
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Mobile</th>
-                <th>Item Requested</th>
-                <th>Hostel</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-            {% for r in requests %}
-              <tr>
-                <td>{{ r.id }}</td>
-                <td>{{ r.name }}</td>
-                <td>{{ r.mobile }}</td>
-                <td>{{ r.item }}</td>
-                <td>{{ r.hostel }}</td>
-                <td>
-                  {% if r.created_by == username %}
-                  <a href="{{ url_for('edit_request', id=r.id) }}" class="btn btn-sm btn-warning">Edit</a>
-                  <a href="{{ url_for('delete_request', id=r.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Delete this request?')">Delete</a>
-                  {% else %}
-                  <span class="text-muted">Owned by {{ r.created_by }}</span>
-                  {% endif %}
-                </td>
-              </tr>
-            {% endfor %}
-            </tbody>
-          </table>
+        <h5 class="card-title mb-3"><i class="bi bi-heart"></i> Unfulfilled Requests</h5>
+        <div id="requests-container">
+          {% if requests %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead class="table-dark">
+                <tr>
+                  <th>Item Needed</th>
+                  <th>Requester</th>
+                  <th>Contact</th>
+                  <th>Hostel</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="requests-table">
+                {% for r in requests %}
+                <tr class="request-item" data-hostel="{{ r.hostel }}" data-search="{{ (r.name + ' ' + r.item + ' ' + r.hostel)|lower }}">
+                  <td>
+                    <strong>{{ r.item }}</strong>
+                    {% if r.created_by == username %}
+                    <span class="badge bg-primary ms-1">Yours</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ r.name }}</td>
+                  <td>{{ r.mobile }}</td>
+                  <td><span class="badge bg-secondary">{{ r.hostel }}</span></td>
+                  <td>
+                    {% if r.created_by == username %}
+                    <a href="{{ url_for('edit_request', id=r.id) }}" class="btn btn-sm btn-outline-warning">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="{{ url_for('delete_request', id=r.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this request?')">
+                      <i class="bi bi-trash"></i>
+                    </a>
+                    {% else %}
+                    <span class="text-muted">Contact to help</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <i class="bi bi-search-heart"></i>
+            <h5>No requests yet</h5>
+            <p class="text-muted">Create a request for items you need!</p>
+            <button class="btn btn-info" onclick="toggleForm('request')">
+              <i class="bi bi-plus-circle"></i> Create Request
+            </button>
+          </div>
+          {% endif %}
         </div>
-        {% else %}
-        <div class="text-center py-4">
-          <p class="text-muted">No unfulfilled requests yet.</p>
-          <button class="btn btn-info" onclick="toggleForm('request')">Create the first request!</button>
-        </div>
-        {% endif %}
       </div>
     </div>
   </div>
 </div>
 
-<script>
-  // Close forms when clicking outside (optional enhancement)
-  document.addEventListener('click', function(event) {
-    const barterForm = document.getElementById('barter-form');
-    const requestForm = document.getElementById('request-form');
-    const createBarterBtn = document.querySelector('.btn-success');
-    const createRequestBtn = document.querySelector('.btn-info');
-    
-    if (barterForm.style.display === 'block' && 
-        !barterForm.contains(event.target) && 
-        event.target !== createBarterBtn) {
-      hideForms();
-    }
-    
-    if (requestForm.style.display === 'block' && 
-        !requestForm.contains(event.target) && 
-        event.target !== createRequestBtn) {
-      hideForms();
-    }
-  });
-</script>
-<!-- Initiate Trade Offer Modal -->
+<!-- Trade Offer Modal -->
 <div class="modal fade" id="tradeOfferModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Initiate Trade Offer</h5>
+        <h5 class="modal-title"><i class="bi bi-arrow-left-right"></i> Initiate Trade Offer</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
@@ -284,20 +453,9 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="submitTradeOffer()">Send Trade Offer</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- View Trade Offers Button (Add this in the header section) -->
-<div class="row mb-3">
-  <div class="col">
-    <div class="d-flex justify-content-between align-items-center">
-      <span>Welcome, <strong>{{ username }}</strong>!</span>
-      <div>
-        <a href="{{ url_for('view_trade_offers') }}" class="btn btn-outline-warning btn-sm me-2">View My Trade Offers</a>
-        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
+        <button type="button" class="btn btn-primary" onclick="submitTradeOffer()">
+          <i class="bi bi-send"></i> Send Trade Offer
+        </button>
       </div>
     </div>
   </div>
@@ -305,17 +463,168 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // Trade Offer functionality
+  // Dark Mode Functionality
+  const themeToggle = document.getElementById('themeToggle');
+  const currentTheme = localStorage.getItem('theme') || 'light';
+  
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  updateThemeIcon(currentTheme);
+
+  themeToggle.addEventListener('click', () => {
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+  });
+
+  function updateThemeIcon(theme) {
+    const icon = themeToggle.querySelector('i');
+    icon.className = theme === 'light' ? 'bi bi-moon' : 'bi bi-sun';
+  }
+
+  // View Management
+  document.querySelectorAll('#viewTabs .nav-link').forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      e.preventDefault();
+      const view = tab.getAttribute('data-view');
+      
+      // Update active tab
+      document.querySelectorAll('#viewTabs .nav-link').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      
+      // Show/hide views
+      document.getElementById('barters-view').style.display = view === 'barters' ? 'block' : 'none';
+      document.getElementById('requests-view').style.display = view === 'requests' ? 'block' : 'none';
+      
+      // Apply current filters to the new view
+      applyFilters();
+    });
+  });
+
+  // Search and Filter Functionality
+  const searchInput = document.getElementById('searchInput');
+  const hostelFilter = document.getElementById('hostelFilter');
+  const activeFilters = document.getElementById('activeFilters');
+  const filterBadges = document.getElementById('filterBadges');
+
+  searchInput.addEventListener('input', applyFilters);
+  hostelFilter.addEventListener('change', applyFilters);
+
+  function applyFilters() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const selectedHostel = hostelFilter.value;
+    const currentView = document.querySelector('#viewTabs .nav-link.active').getAttribute('data-view');
+    
+    const items = document.querySelectorAll(`.${currentView.slice(0, -1)}-item`);
+    let visibleCount = 0;
+
+    items.forEach(item => {
+      const searchData = item.getAttribute('data-search');
+      const itemHostel = item.getAttribute('data-hostel');
+      
+      const matchesSearch = searchData.includes(searchTerm);
+      const matchesHostel = !selectedHostel || itemHostel === selectedHostel;
+      
+      if (matchesSearch && matchesHostel) {
+        item.style.display = '';
+        visibleCount++;
+      } else {
+        item.style.display = 'none';
+      }
+    });
+
+    // Update empty states
+    updateEmptyState(currentView, visibleCount);
+    
+    // Update active filters display
+    updateActiveFilters(searchTerm, selectedHostel);
+  }
+
+  function updateEmptyState(view, visibleCount) {
+    const container = document.getElementById(`${view}-container`);
+    const emptyState = container.querySelector('.empty-state');
+    const table = container.querySelector('table');
+    
+    if (visibleCount === 0 && table) {
+      if (!emptyState) {
+        const emptyHtml = `
+          <div class="empty-state">
+            <i class="bi bi-search"></i>
+            <h5>No matching items found</h5>
+            <p class="text-muted">Try adjusting your search or filters</p>
+            <button class="btn btn-outline-secondary" onclick="clearFilters()">
+              Clear Filters
+            </button>
+          </div>
+        `;
+        table.style.display = 'none';
+        container.insertAdjacentHTML('beforeend', emptyHtml);
+      }
+    } else {
+      if (emptyState) {
+        emptyState.remove();
+      }
+      if (table) {
+        table.style.display = '';
+      }
+    }
+  }
+
+  function updateActiveFilters(searchTerm, selectedHostel) {
+    const filters = [];
+    
+    if (searchTerm) {
+      filters.push(`Search: "${searchTerm}"`);
+    }
+    if (selectedHostel) {
+      filters.push(`Hostel: ${selectedHostel}`);
+    }
+    
+    if (filters.length > 0) {
+      filterBadges.innerHTML = filters.map(filter => 
+        `<span class="badge bg-primary filter-badge me-1">${filter}</span>`
+      ).join('');
+      activeFilters.style.display = 'block';
+    } else {
+      activeFilters.style.display = 'none';
+    }
+  }
+
+  function clearFilters() {
+    searchInput.value = '';
+    hostelFilter.value = '';
+    applyFilters();
+  }
+
+  // Form Management
+  function showView(view) {
+    // Handled by tab system now
+  }
+  
+  function toggleForm(formType) {
+    if (formType === 'barter') {
+      document.getElementById('barter-form').style.display = 'block';
+      document.getElementById('request-form').style.display = 'none';
+    } else {
+      document.getElementById('barter-form').style.display = 'none';
+      document.getElementById('request-form').style.display = 'block';
+    }
+  }
+
+  function hideForms() {
+    document.getElementById('barter-form').style.display = 'none';
+    document.getElementById('request-form').style.display = 'none';
+  }
+
+  // Trade Offer Functionality
   function initiateTradeOffer(barterId, itemName) {
     document.getElementById('selectedBarterId').value = barterId;
     document.getElementById('barterItemName').textContent = itemName;
     
-    // Clear previous form data
     document.getElementById('offererName').value = '';
     document.getElementById('offererMobile').value = '';
     document.getElementById('itemDescription').value = '';
     
-    // Show modal
     const modal = new bootstrap.Modal(document.getElementById('tradeOfferModal'));
     modal.show();
   }
@@ -331,20 +640,17 @@
       return;
     }
     
-    // Create form data
     const formData = new FormData();
     formData.append('name', name);
     formData.append('mobile', mobile);
     formData.append('item_description', itemDescription);
     
-    // Submit the trade offer
     fetch(`/create_trade_offer/${barterId}`, {
       method: 'POST',
       body: formData
     })
     .then(response => {
       if (response.ok) {
-        // Close modal and show success message
         const modal = bootstrap.Modal.getInstance(document.getElementById('tradeOfferModal'));
         modal.hide();
         alert('Trade offer sent successfully!');
@@ -357,32 +663,30 @@
       alert('Error sending trade offer');
     });
   }
-  
-  // Make barters clickable
+
+  // Close forms when clicking outside
+  document.addEventListener('click', function(event) {
+    const barterForm = document.getElementById('barter-form');
+    const requestForm = document.getElementById('request-form');
+    const createBarterBtn = document.querySelector('.btn-success');
+    const createRequestBtn = document.querySelector('.btn-info');
+    
+    if (barterForm.style.display === 'block' && 
+        !barterForm.contains(event.target) && 
+        event.target !== createBarterBtn) {
+      hideForms();
+    }
+    
+    if (requestForm.style.display === 'block' && 
+        !requestForm.contains(event.target) && 
+        event.target !== createRequestBtn) {
+      hideForms();
+    }
+  });
+
+  // Initialize
   document.addEventListener('DOMContentLoaded', function() {
-    const barterRows = document.querySelectorAll('#barters-view tbody tr');
-    barterRows.forEach(row => {
-      // Don't make the "No barters" row clickable
-      if (!row.querySelector('td[colspan]')) {
-        row.style.cursor = 'pointer';
-        row.addEventListener('click', function(e) {
-          // Don't trigger if clicking on action buttons
-          if (!e.target.closest('a, button')) {
-            const barterId = this.cells[0].textContent;
-            const itemName = this.cells[3].textContent;
-            initiateTradeOffer(barterId, itemName);
-          }
-        });
-        
-        // Add hover effect
-        row.addEventListener('mouseenter', function() {
-          this.style.backgroundColor = '#f8f9fa';
-        });
-        row.addEventListener('mouseleave', function() {
-          this.style.backgroundColor = '';
-        });
-      }
-    });
+    applyFilters();
   });
 </script>
 </body>
