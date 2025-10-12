@@ -166,7 +166,7 @@
     </div>
     <div class="col-md-4">
       <div class="card stat-card">
-        <div class="stat-number">{{ trade_offers|selectattr("created_by", "equalto", username)|list|length }}</div>
+        <div class="stat-number">{{ trade_offers_count }}</div>
         <div class="text-muted">My Offers</div>
       </div>
     </div>
@@ -321,7 +321,7 @@
                 <tr class="barter-item" data-hostel="{{ b.hostel }}" data-search="{{ (b.name + ' ' + b.item + ' ' + b.hostel)|lower }}">
                   <td>
                     <strong>{{ b.item }}</strong>
-                    {% if b.created_by == username %}
+                    {% if b.username == username %}
                     <span class="badge bg-primary ms-1">Yours</span>
                     {% endif %}
                   </td>
@@ -329,7 +329,7 @@
                   <td>{{ b.mobile }}</td>
                   <td><span class="badge bg-secondary">{{ b.hostel }}</span></td>
                   <td>
-                    {% if b.created_by == username %}
+                    {% if b.username == username %}
                     <a href="{{ url_for('edit_barter', id=b.id) }}" class="btn btn-sm btn-outline-warning">
                       <i class="bi bi-pencil"></i>
                     </a>
@@ -385,7 +385,7 @@
                 <tr class="request-item" data-hostel="{{ r.hostel }}" data-search="{{ (r.name + ' ' + r.item + ' ' + r.hostel)|lower }}">
                   <td>
                     <strong>{{ r.item }}</strong>
-                    {% if r.created_by == username %}
+                    {% if r.username == username %}
                     <span class="badge bg-primary ms-1">Yours</span>
                     {% endif %}
                   </td>
@@ -393,7 +393,7 @@
                   <td>{{ r.mobile }}</td>
                   <td><span class="badge bg-secondary">{{ r.hostel }}</span></td>
                   <td>
-                    {% if r.created_by == username %}
+                    {% if r.username == username %}
                     <a href="{{ url_for('edit_request', id=r.id) }}" class="btn btn-sm btn-outline-warning">
                       <i class="bi bi-pencil"></i>
                     </a>
