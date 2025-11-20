@@ -14,7 +14,7 @@ if not app.secret_key:
 def initialize_app():
     from database import init_db
     init_db()
-    create_default_admin()
+    #create_default_admin()
 
 initialize_app()
 
